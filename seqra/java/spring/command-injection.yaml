@@ -1,0 +1,30 @@
+rules:
+  - id: java.spring.command-injection
+    languages:
+      - java
+    severity: ERROR
+    metadata:
+      shortDescription: Command line $BUILDER depends on a user provided $FILEPATH
+      cwe: CWE-94
+      license: MIT
+    message: Command line $BUILDER depends on a user provided $FILEPATH
+    patterns:
+      - pattern: |
+          ProcessBuilder $BUILDER = new ProcessBuilder($FILEPATH);
+      - pattern-not: |
+          $PATTERN.matcher($FILEPATH).matches();
+      - pattern-inside: |
+          @$ANNOTATION(...)
+          $RETURNTYPE $METHOD(..., String $FILEPATH, ...) {
+            ...
+          }
+
+      - metavariable-pattern:
+          metavariable: $ANNOTATION
+          pattern-either:
+          - pattern: RequestMapping
+          - pattern: DeleteMapping
+          - pattern: GetMapping
+          - pattern: PatchMapping
+          - pattern: PostMapping
+          - pattern: PutMapping

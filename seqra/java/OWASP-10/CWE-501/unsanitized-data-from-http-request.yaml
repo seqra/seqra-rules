@@ -1,0 +1,25 @@
+rules:
+- id: unsanitized-data-from-http-request
+  message: "Trust Boundary Violation"
+  languages: [java]
+  severity: WARNING
+  mode: taint
+  pattern-sources:
+    - patterns:
+      - pattern: |
+          (HttpServletRequest $REQ).$FUNC(...)
+      - pattern-not: |
+          (HttpServletRequest $REQ).getSession()
+  pattern-propagators:
+    - pattern: $RES = org.owasp.esapi.ESAPI.encoder().encodeForHTML($IN)
+      from: $IN
+      to: $RES
+  pattern-sinks:
+    - patterns:
+      - pattern: (HttpServletRequest $REQ).getSession().$FUNC($NAME, $VALUE);
+      - metavariable-regex:
+          metavariable: $FUNC
+          regex: ^(putValue|setAttribute)$
+  metadata:
+    shortDescription: "Trust Boundary Violation"
+    cwe: CWE-501

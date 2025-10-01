@@ -1,0 +1,37 @@
+rules:
+  - id: url-stream-read-xss
+    message: "Writing user input directly to a web page allows for a cross-site scripting vulnerability."
+    metadata:
+      shortDescription: "Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')"
+      cwe: CWE-79
+    severity: ERROR
+    patterns:
+      - pattern-either:
+        - pattern-inside: |
+            @RequestMapping(...)
+            public String $M(..., String $RAW_URL, ...) {
+            ...
+            }
+        - pattern-inside: |
+            @GetMapping(...)
+            public String $M(..., String $RAW_URL, ...) {
+            ...
+            }
+      - pattern-either:
+        - pattern-inside: |
+            URL $URL = new URL($RAW_URL);
+            URLConnection $URL_CONN = $URL.openConnection();
+            ...
+        - pattern-inside: |
+            URL $URL = new URL($RAW_URL);
+            URLConnection $URL_CONN_2 = $URL.openConnection();
+            HttpURLConnection $URL_CONN = (HttpURLConnection) $URL_CONN_2;
+            ...
+      - pattern: |
+          InputStream $IS = $URL_CONN.getInputStream();
+          InputStreamReader $ISR = new InputStreamReader($IS)
+          BufferedReader $READER = new BufferedReader($ISR);
+          String $INPUT = $READER.readLine();
+          return $INPUT;
+    languages:
+      - java

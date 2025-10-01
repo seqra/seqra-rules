@@ -1,0 +1,58 @@
+rules:
+- id: gitlab.find_sec_bugs.XSS_SERVLET-2.XSS_SERVLET_PARAMETER-1
+  languages:
+  - java
+  message: |
+    The Servlet can read GET and POST parameters from various methods. The value obtained should be
+    considered unsafe. You may need to validate or sanitize those values before passing them to
+    sensitive APIs
+  metadata:
+    category: security
+    cwe: CWE-20
+    shortDescription: Improper Input Validation
+    technology:
+    - java
+    primary_identifier: find_sec_bugs.XSS_SERVLET-2.XSS_SERVLET_PARAMETER-1
+    secondary_identifiers:
+    - name: Find Security Bugs-XSS_SERVLET
+      type: find_sec_bugs_type
+      value: XSS_SERVLET
+    - name: Find Security Bugs-XSS_SERVLET_PARAMETER
+      type: find_sec_bugs_type
+      value: XSS_SERVLET_PARAMETER
+    license: MIT
+    vulnerability_class:
+    - Other
+    source: https://semgrep.dev/r/gitlab.find_sec_bugs.XSS_SERVLET-2.XSS_SERVLET_PARAMETER-1
+    shortlink: https://sg.run/PP6q
+    semgrep.dev:
+      rule:
+        r_id: 21245
+        rv_id: 835548
+        rule_id: nJUneR
+        version_id: d6TKg2J
+        url: https://semgrep.dev/playground/r/d6TKg2J/gitlab.find_sec_bugs.XSS_SERVLET-2.XSS_SERVLET_PARAMETER-1
+        origin: community
+  pattern-either:
+  - patterns:
+    - pattern-inside: $TYPE $FUNC(..., ServletRequest $REQ, ...) { ... }
+    - pattern-either:
+      - pattern: $REQ.getParameter(...);
+      - pattern: $REQ.getParameterValues();
+      - pattern: $REQ.getParameterMap(...);
+      - pattern: $REQ.getParameterNames();
+  - patterns:
+    - pattern-inside: $TYPE $FUNC(..., HttpServletRequest $SREQ, ...) { ... }
+    - pattern-either:
+      - pattern: $SREQ.getRequestedSessionId();
+      - pattern: $SREQ.getQueryString();
+      - pattern: $SREQ.getParameter(...);
+      - pattern: $SREQ.getParameterValues();
+      - pattern: $SREQ.getParameterMap(...);
+      - pattern: $SREQ.getParameterNames();
+      - patterns:
+        - pattern: $SREQ.getHeader($HEADER);
+        - metavariable-regex:
+            metavariable: $HEADER
+            regex: (?i)(Host|Referer|User-Agent)
+  severity: WARNING

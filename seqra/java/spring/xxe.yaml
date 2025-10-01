@@ -1,0 +1,34 @@
+rules:
+  - id: java.spring.xxe
+    languages:
+      - java
+    severity: ERROR
+    message: Parse an untrusted $REQUEST body
+    metadata:
+      cwe: CWE-611
+      license: MIT
+      shortDescription: Parse an untrusted $REQUEST body
+    patterns:
+      - pattern: |
+          ServletInputStream $INPUT = $REQUEST.getInputStream();
+          ...
+          java.util.Scanner $SCANNER = new java.util.Scanner($INPUT);
+          ...
+          String $BODY = $SCANNER.next();
+          ...
+          $DATABASE.parse($BODY);
+      - pattern-inside: |
+          @$ANNOTATION(...)
+          $RETURNTYPE $METHOD(..., HttpServletRequest $REQUEST, ...) {
+            ...
+          }
+
+      - metavariable-pattern:
+          metavariable: $ANNOTATION
+          pattern-either:
+          - pattern: RequestMapping
+          - pattern: DeleteMapping
+          - pattern: GetMapping
+          - pattern: PatchMapping
+          - pattern: PostMapping
+          - pattern: PutMapping

@@ -1,0 +1,45 @@
+rules:
+  - id: java.spring.path-injection
+    languages:
+      - java
+    severity: ERROR
+    message: Create and use a $FILE with the untrusted $FILENAME path
+    metadata:
+      cwe: CWE-22
+      license: MIT
+      shortDescription: Create and use a $FILE with the untrusted $FILENAME path
+    patterns:
+      - pattern-either:
+        - pattern: |
+            String $FILENAME = $MULTIFILE.getOriginalFilename();
+            ...
+            File $FILE = new File($FILENAME);
+            ...
+            $FILE.delete();
+        - pattern: |
+              String $FILENAME = $MULTIFILE.getOriginalFilename();
+              ...
+              File $FILE = new File($FILENAME);
+              ...
+              $FILE.createNewFile();
+        - pattern: |
+              String $FILENAME = $MULTIFILE.getOriginalFilename();
+              ...
+              File $FILE = new File($FILENAME);
+              ...
+              FileOutputStream $OUTPUT = new FileOutputStream($FILE);
+      - pattern-inside: |
+          @$ANNOTATION(...)
+          $RETURNTYPE $METHOD(..., @RequestParam(...) MultipartFile $MULTIFILE, ...) {
+            ...
+          }
+
+      - metavariable-pattern:
+          metavariable: $ANNOTATION
+          pattern-either:
+          - pattern: RequestMapping
+          - pattern: DeleteMapping
+          - pattern: GetMapping
+          - pattern: PatchMapping
+          - pattern: PostMapping
+          - pattern: PutMapping

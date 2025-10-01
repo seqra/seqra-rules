@@ -1,0 +1,30 @@
+rules:
+  - id: java.spring.sql-injection
+    languages:
+      - java
+    severity: ERROR
+    message: $USER_INPUT is used in $QUERY as it is or as a result of concatenation, and then called in "executeQuery"
+    metadata:
+      shortDescription: "Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection')"
+      cwe: CWE-89
+      license: MIT
+    patterns:
+      - pattern: |
+          $QUERY = ... + $USER_INPUT + ...;
+          ...
+          $STATEMENT.executeQuery($QUERY);
+      - pattern-inside: |
+          @$ANNOTATION(...)
+          $RETURNTYPE $METHOD(..., String $USER_INPUT, ...) {
+            ...
+          }
+
+      - metavariable-pattern:
+          metavariable: $ANNOTATION
+          pattern-either:
+          - pattern: RequestMapping
+          - pattern: DeleteMapping
+          - pattern: GetMapping
+          - pattern: PatchMapping
+          - pattern: PostMapping
+          - pattern: PutMapping

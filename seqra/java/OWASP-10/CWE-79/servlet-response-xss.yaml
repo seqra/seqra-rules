@@ -1,0 +1,32 @@
+rules:
+  - id: servlet-response-xss
+    message: "Writing user input directly to a web page allows for a cross-site scripting vulnerability."
+    metadata:
+      shortDescription: "Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')"
+      cwe: CWE-79
+    severity: ERROR
+    patterns:
+      - pattern-inside: |
+          @RequestMapping($PATH)
+          public String $F(..., HttpServletRequest $R, ...) {
+          ...
+          }
+      - pattern-either:
+          - pattern: |
+              String $P = $R.getParameter($PP);
+              ...
+              return ... + $P + ...;
+          - pattern: |
+              String $P = $R.getParameter($PP);
+              ...
+              return $P;
+          - pattern: |
+              String $P = $R.getParameter($PP);
+              ...
+              return $P + ...;
+          - pattern: |
+              String $P = $R.getParameter($PP);
+              ...
+              return ... + $P;
+    languages:
+      - java

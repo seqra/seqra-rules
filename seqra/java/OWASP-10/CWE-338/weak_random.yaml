@@ -1,0 +1,12 @@
+rules:
+- id: use_of_weak_random
+  severity: ERROR
+  metadata:
+    shortDescription: "Use of Cryptographically Weak Pseudo-Random Number Generator"
+    cwe: CWE-338
+  message: "Use of Cryptographically Weak Pseudo-Random Number Generator"
+  patterns:
+    - pattern: |
+        $VALUE = Math.random();
+  languages:
+    - java
