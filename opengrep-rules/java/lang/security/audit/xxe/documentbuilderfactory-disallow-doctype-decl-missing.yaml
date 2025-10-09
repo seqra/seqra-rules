@@ -40,8 +40,14 @@ rules:
       - by-side-effect: true
         patterns:
           - pattern-either:
-              - pattern: |
-                  $FACTORY = DocumentBuilderFactory.newInstance();
+              - patterns:
+                - pattern: |
+                    $FACTORY = DocumentBuilderFactory.newInstance();
+                - pattern-not-inside: |
+                    ...
+                    $BUILDER = $FACTORY.newDocumentBuilder();
+                    ...
+                    $BUILDER.setEntityResolver(...);
               - patterns:
                   - pattern: $FACTORY
                   - pattern-inside: |

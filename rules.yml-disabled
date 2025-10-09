@@ -56,3 +56,555 @@ rules:
             metavariable: $HEADER
             regex: (?i)(Host|Referer|User-Agent)
   severity: WARNING
+- id: mobsf.mobsfscan.android.logging.android_logging
+  patterns:
+  - pattern-not: System.out.print();
+  - pattern-not: System.out.println();
+  - pattern-not: System.err.print();
+  - pattern-not: System.err.println();
+  - pattern-not: Log.$D("...", "...", ...);
+  - pattern-not: Log.$D($T, "...", ...);
+  - pattern-not: System.out.print("...");
+  - pattern-not: System.out.println("...");
+  - pattern-not: System.err.print("...");
+  - pattern-not: System.err.println("...");
+  - pattern-either:
+    - pattern: |
+        Log.$D($T, $X + "...", ...);
+    - pattern: |
+        Log.$D($T, "..." + $X + "...", ...);
+    - pattern: |
+        Log.$D($T, "..." + $X, ...);
+    - pattern: |
+        $Y = $Z;
+        ...
+        Log.$D($T,<... $Y ...>, ...);
+    - pattern: |
+        System.out.print(...);
+    - pattern: |
+        System.err.print(...);
+    - pattern: |
+        System.out.println(...);
+    - pattern: |
+        System.err.println(...);
+  message: The App logs information. Please ensure that sensitive information is never
+    logged.
+  languages:
+  - java
+  severity: INFO
+  metadata:
+    cwe: CWE-532
+    owasp-mobile: m1
+    masvs: storage-3
+    reference: https://github.com/MobSF/owasp-mstg/blob/master/Document/0x05d-Testing-Data-Storage.md#logs
+    license: LGPL-3.0-or-later
+    vulnerability_class:
+    - Other
+    source: https://semgrep.dev/r/mobsf.mobsfscan.android.logging.android_logging
+    shortlink: https://sg.run/6pQo
+    semgrep.dev:
+      rule:
+        r_id: 43715
+        rv_id: 833209
+        rule_id: 8GU0OP
+        version_id: pZTXj2v
+        url: https://semgrep.dev/playground/r/pZTXj2v/mobsf.mobsfscan.android.logging.android_logging
+        origin: community
+- id: trailofbits.jvm.gc-call.gc-call
+  message: |
+    Calling `gc` suggests to the JVM that the garbage collector should be
+    run, and memory should be reclaimed. This is only a suggestion, and there
+    is no guarantee that anything will happen. Relying on this behavior for
+    correctness or memory management is an anti-pattern.
+  languages:
+  - java
+  - kotlin
+  severity: WARNING
+  metadata:
+    category: best-practice
+    subcategory:
+    - audit
+    technology:
+    - java
+    - kotlin
+    confidence: HIGH
+    likelihood: HIGH
+    impact: LOW
+    references:
+    - https://stackoverflow.com/questions/2414105/why-is-it-bad-practice-to-call-system-gc
+    license: AGPL-3.0 license
+    source: https://semgrep.dev/r/trailofbits.jvm.gc-call.gc-call
+    shortlink: https://sg.run/9ApQ0
+    semgrep.dev:
+      rule:
+        r_id: 113223
+        rv_id: 833287
+        rule_id: 5rUdoB9
+        version_id: LjTEbBG
+        url: https://semgrep.dev/playground/r/LjTEbBG/trailofbits.jvm.gc-call.gc-call
+        origin: community
+  pattern-either:
+  - pattern: System.gc()
+  - pattern: Runtime.getRuntime().gc()
+- id: gitlab.find_sec_bugs.PREDICTABLE_RANDOM-1
+  languages:
+  - java
+  patterns:
+  - pattern-either:
+    - pattern: |
+        $R = new java.util.Random();
+        ...
+        $R.$METHOD(...);
+    - pattern: org.apache.commons.lang.math.RandomUtils.$METHOD(...)
+    - pattern: org.apache.commons.lang.RandomStringUtils.$METHOD(...)
+  - metavariable-regex:
+      metavariable: $METHOD
+      regex: ^(next|random)
+  - pattern-not: $R = new java.security.SecureRandom();
+  message: |
+    Depending on the context, generating weak random numbers may expose cryptographic functions
+    which rely on these numbers, to be exploitable. When generating numbers for sensitive values
+    such as tokens, nonces, and cryptographic keys, it is recommended that the `DRBG` instance
+    of `SecureRandom` be used.
+
+    Example using `DRBG` with `SecureRandom`:
+    ```
+    public SecureRandom getSecureRandomDRBG() throws NoSuchAlgorithmException {
+    // Use DRBG according to
+    http://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-90Ar1.pdf
+        return SecureRandom.getInstance("DRBG",
+                // Security strength in bits (default is 128)
+                DrbgParameters.instantiation(256,
+                    // Set prediction resistance and re-seeding
+                    DrbgParameters.Capability.PR_AND_RESEED,
+                    // Set the personalization string (optional, not necessary)
+                    "some_personalization_string".getBytes()
+                )
+        );
+    }
+    ```
+
+    For more information on Java Cryptography see:
+    https://docs.oracle.com/en/java/javase/15/security/java-cryptography-architecture-jca-reference-guide.html
+  severity: WARNING
+  metadata:
+    shortDescription: Use of insufficiently random values
+    category: security
+    cwe: CWE-330
+    technology:
+    - java
+    primary_identifier: find_sec_bugs.PREDICTABLE_RANDOM-1
+    secondary_identifiers:
+    - name: Find Security Bugs-PREDICTABLE_RANDOM
+      type: find_sec_bugs_type
+      value: PREDICTABLE_RANDOM
+    license: MIT
+    vulnerability_class:
+    - Other
+    source: https://semgrep.dev/r/gitlab.find_sec_bugs.PREDICTABLE_RANDOM-1
+    shortlink: https://sg.run/1kbD
+    semgrep.dev:
+      rule:
+        r_id: 21222
+        rv_id: 835524
+        rule_id: lBUXPJ
+        version_id: 0bTw3Rr
+        url: https://semgrep.dev/playground/r/0bTw3Rr/gitlab.find_sec_bugs.PREDICTABLE_RANDOM-1
+        origin: community
+- id: mobsf.mobsfscan.crypto.insecure_random.java_insecure_random
+  patterns:
+  - pattern-either:
+    - pattern: |
+        import java.util.Random;
+    - pattern: |
+        import java.util.concurrent.ThreadLocalRandom;
+  message: The App uses an insecure Random Number Generator.
+  languages:
+  - java
+  severity: WARNING
+  metadata:
+    cwe: CWE-330
+    owasp-mobile: m5
+    masvs: crypto-6
+    reference: https://github.com/MobSF/owasp-mstg/blob/master/Document/0x04g-Testing-Cryptography.md#weak-random-number-generators
+    license: LGPL-3.0-or-later
+    vulnerability_class:
+    - Other
+    source: https://semgrep.dev/r/mobsf.mobsfscan.crypto.insecure_random.java_insecure_random
+    shortlink: https://sg.run/vo4A
+    semgrep.dev:
+      rule:
+        r_id: 43733
+        rv_id: 833227
+        rule_id: PeUKqY
+        version_id: nWTy4Qq
+        url: https://semgrep.dev/playground/r/nWTy4Qq/mobsf.mobsfscan.crypto.insecure_random.java_insecure_random
+        origin: community
+- id: gitlab.find_sec_bugs.IMPROPER_UNICODE-1
+  languages:
+  - java
+  message: |
+    Improper Handling of Unicode Encoding
+  metadata:
+    category: security
+    confidence: HIGH
+    cwe: CWE-176
+    shortDescription: Improper Handling of Unicode Encoding
+    primary_identifier: find_sec_bugs.IMPROPER_UNICODE-1
+    secondary_identifiers:
+    - name: Find Security Bugs-IMPROPER_UNICODE
+      type: find_sec_bugs_type
+      value: IMPROPER_UNICODE
+    license: MIT
+    vulnerability_class:
+    - Other
+    source: https://semgrep.dev/r/gitlab.find_sec_bugs.IMPROPER_UNICODE-1
+    shortlink: https://sg.run/xPlp
+    semgrep.dev:
+      rule:
+        r_id: 21230
+        rv_id: 835532
+        rule_id: j2UwZp
+        version_id: pZTXDv2
+        url: https://semgrep.dev/playground/r/pZTXDv2/gitlab.find_sec_bugs.IMPROPER_UNICODE-1
+        origin: community
+  pattern-either:
+  - patterns:
+    - pattern-either:
+      - pattern: |
+          $S = (String $INPUT).$TRANSFORM(...);
+          ...
+          $S.$METHOD(...);
+      - pattern: (String $INPUT).$TRANSFORM().$METHOD(...);
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (equals|equalsIgnoreCase|indexOf)
+    - metavariable-regex:
+        metavariable: $TRANSFORM
+        regex: (toLowerCase|toUpperCase)
+  - pattern: java.text.Normalizer.normalize(...);
+  - pattern: java.net.IDN.toASCII(...);
+  - pattern: (URI $U).toASCIIString();
+  severity: ERROR
+- id: gitlab.find_sec_bugs.UNENCRYPTED_SOCKET-1.UNENCRYPTED_SERVER_SOCKET-1
+  languages:
+  - java
+  message: |
+    Beyond using an SSL socket, you need to make sure your use of SSLSocketFactory
+    does all the appropriate certificate validation checks to make sure you are not
+    subject to man-in-the-middle attacks. Please read the OWASP Transport Layer
+    Protection Cheat Sheet for details on how to do this correctly.
+  metadata:
+    cwe: CWE-319
+    shortDescription: Cleartext Transmission of Sensitive Information
+    primary_identifier: find_sec_bugs.UNENCRYPTED_SOCKET-1.UNENCRYPTED_SERVER_SOCKET-1
+    secondary_identifiers:
+    - name: Find Security Bugs-UNENCRYPTED_SOCKET
+      type: find_sec_bugs_type
+      value: UNENCRYPTED_SOCKET
+    - name: Find Security Bugs-UNENCRYPTED_SERVER_SOCKET
+      type: find_sec_bugs_type
+      value: UNENCRYPTED_SERVER_SOCKET
+    license: MIT
+    vulnerability_class:
+    - Other
+    source: https://semgrep.dev/r/gitlab.find_sec_bugs.UNENCRYPTED_SOCKET-1.UNENCRYPTED_SERVER_SOCKET-1
+    shortlink: https://sg.run/4k1Z
+    semgrep.dev:
+      rule:
+        r_id: 21188
+        rv_id: 835494
+        rule_id: nJUn7D
+        version_id: yeTNgbz
+        url: https://semgrep.dev/playground/r/yeTNgbz/gitlab.find_sec_bugs.UNENCRYPTED_SOCKET-1.UNENCRYPTED_SERVER_SOCKET-1
+        origin: community
+  patterns:
+  - pattern: new java.net.Socket(...)
+  severity: WARNING
+- id: gitlab.find_sec_bugs.COOKIE_USAGE-1
+  languages:
+  - java
+  message: |
+    The information stored in a custom cookie should not be sensitive or related to the session.
+    In most cases, sensitive data should only be stored in session and referenced by the user's
+    session cookie.
+  metadata:
+    category: security
+    cwe: CWE-614
+    shortDescription: Sensitive Cookie in HTTPS Session Without 'Secure' Attribute
+    technology:
+    - java
+    primary_identifier: find_sec_bugs.COOKIE_USAGE-1
+    secondary_identifiers:
+    - name: Find Security Bugs-COOKIE_USAGE
+      type: find_sec_bugs_type
+      value: COOKIE_USAGE
+    license: MIT
+    vulnerability_class:
+    - Other
+    source: https://semgrep.dev/r/gitlab.find_sec_bugs.COOKIE_USAGE-1
+    shortlink: https://sg.run/XWze
+    semgrep.dev:
+      rule:
+        r_id: 21164
+        rv_id: 835468
+        rule_id: qNUpNY
+        version_id: K3TrLAp
+        url: https://semgrep.dev/playground/r/K3TrLAp/gitlab.find_sec_bugs.COOKIE_USAGE-1
+        origin: community
+  patterns:
+  - pattern-inside: |
+      $FUNC(..., HttpServletRequest $REQ, ...) {
+        ...
+      }
+  - pattern-either:
+    - patterns:
+      - pattern-inside: |
+          for (Cookie $C : $REQ.getCookies()) {
+              ...
+          }
+      - pattern-either:
+        - pattern: $C.getName();
+        - pattern: $C.getValue();
+        - pattern: $C.getPath();
+    - pattern: (Cookie $COOKIE).getName();
+    - pattern: (Cookie $COOKIE).getValue();
+    - pattern: (Cookie $COOKIE).getPath();
+  severity: WARNING
+- id: mobsf.mobsfscan.deserialization.object_deserialization.object_deserialization
+  patterns:
+  - pattern: new ObjectInputStream(...);
+  severity: WARNING
+  languages:
+  - java
+  message: |
+    Found object deserialization using ObjectInputStream. Deserializing entire Java objects is dangerous because malicious actors can create Java object streams with unintended consequences. Ensure that the objects being deserialized are not user-controlled. Consider using HMACs to sign the data stream to make sure it is not tampered with, or consider only  transmitting object fields and populating a new object.
+  metadata:
+    cwe: CWE-502
+    owasp-mobile: m1
+    masvs: platform-8
+    reference: https://github.com/MobSF/owasp-mstg/blob/master/Document/0x05h-Testing-Platform-Interaction.md#testing-object-persistence-mstg-platform-8
+    license: LGPL-3.0-or-later
+    vulnerability_class:
+    - Other
+    source: https://semgrep.dev/r/mobsf.mobsfscan.deserialization.object_deserialization.object_deserialization
+    shortlink: https://sg.run/QxZ4
+    semgrep.dev:
+      rule:
+        r_id: 43742
+        rv_id: 833236
+        rule_id: "0oUZYJ"
+        version_id: PkTxr20
+        url: https://semgrep.dev/playground/r/PkTxr20/mobsf.mobsfscan.deserialization.object_deserialization.object_deserialization
+        origin: community
+- id: gitlab.find_sec_bugs.PT_ABSOLUTE_PATH_TRAVERSAL-1
+  languages:
+  - java
+  mode: taint
+  pattern-sources:
+  - patterns:
+    - pattern-either:
+      - pattern-inside: |
+          @$ANNOTATION(...)
+          $RETURNTYPE $METHOD(..., @$REQ(...) $TYPE $SOURCE,...) {
+            ...
+          }
+      - pattern-inside: |
+          @$ANNOTATION(...)
+          $RETURNTYPE $METHOD(..., @$REQ $TYPE $SOURCE,...) {
+            ...
+          }
+      - pattern-inside: |
+          @$ANNOTATION(...)
+          $RETURNTYPE $METHOD(..., $TYPE $SOURCE,...) {
+            ...
+          }
+    - focus-metavariable: $SOURCE
+    - metavariable-regex:
+        metavariable: $TYPE
+        regex: ^(?!(Integer|Long|Float|Double|Char|Boolean|int|long|float|double|char|boolean))
+    - metavariable-regex:
+        metavariable: $REQ
+        regex: (RequestBody|PathVariable|RequestParam|RequestHeader|CookieValue|ModelAttribute)
+    - metavariable-pattern:
+        metavariable: $ANNOTATION
+        pattern-either:
+        - pattern: RequestMapping
+        - pattern: DeleteMapping
+        - pattern: GetMapping
+        - pattern: PatchMapping
+        - pattern: PostMapping
+        - pattern: PutMapping
+  - patterns:
+    - pattern: (javax.servlet.http.HttpServletRequest $R).$METHOD(...)
+    - metavariable-regex:
+        metavariable: $METHOD
+        regex: (getInputStream|getParameter|getParameterNames|getParameterMap|getParameterValues|getReader|getCookies|getHeader|getHeaderNames|getHeaders|getPart|getParts|getQueryString)
+  - pattern: (java.util.Scanner $S).$METHOD(...)
+  - pattern: (java.util.stream.Stream).$METHOD(...)
+  - pattern: (java.util.StringJoiner $SJ).toString(...)
+  - pattern: (java.sql.ResultSet.getString $R).$METHOD(...)
+  - pattern: (java.lang.System $S).getProperty(...)
+  - pattern: (java.lang.System $S).getenv(...)
+  - pattern: (java.lang.StringBuilder $SB).toString(...)
+  - pattern: (java.io.FileInputStream $F).read(...)
+  - pattern: (java.io.FileReader $F).read(...)
+  - pattern: (java.net.Socket $S).getInputStream(...)
+  - pattern: (java.net.Socket $S).getOutputStream(...)
+  - pattern: (java.net.DatagramSocket $S).receive(...)
+  - pattern: (java.net.DatagramSocket $S).getInputStream(...)
+  - pattern: java.nio.file.Files.readAllBytes(...)
+  - pattern: java.nio.file.Files.readAllLines(...)
+  - pattern: java.nio.file.Files.lines(...)
+  - pattern: java.nio.file.Files.newBufferedReader(...)
+  - pattern: org.apache.commons.io.IOUtils.toString(...)
+  - pattern: org.apache.commons.io.IOUtils.readLines(...)
+  - pattern: org.apache.commons.io.IOUtils.toByteArray(...)
+  - pattern: (com.fasterxml.jackson.databind.ObjectMapper $OM).readValue(...)
+  - pattern: (com.fasterxml.jackson.databind.ObjectMapper $OM).treeToValue(...)
+  pattern-propagators:
+  - pattern: $LIST.add($X)
+    from: $X
+    to: $LIST
+  - pattern: $MAP.put(..., $X)
+    from: $X
+    to: $MAP
+  - pattern: $STR.concat($X)
+    from: $X
+    to: $STR
+  - pattern: $STR = String.format(..., $X, ...)
+    from: $X
+    to: $STR
+  - pattern: $STR = String.join(..., $X, ...)
+    from: $X
+    to: $STR
+  pattern-sanitizers:
+  - pattern: org.apache.commons.io.FilenameUtils.getName(...)
+  - pattern: org.apache.commons.io.FilenameUtils.getExtension(...)
+  # TODO: Support conditional sanitizers
+  # - patterns:
+  #   - pattern: |
+  #       $PATH = $BP.resolve($X);
+  #       ...
+  #       if ($PATH.startsWith($BP)) {
+  #         ...
+  #       }
+  #   - focus-metavariable:
+  #       - $X
+  #       - $PATH
+  #   by-side-effect: true
+  pattern-sinks:
+  - patterns:
+    - pattern-inside: |
+        $U = new java.net.URI($VAR)
+    - pattern-either:
+      - pattern-inside: new java.io.File($U)
+      - pattern-inside: java.nio.file.Paths.get($U)
+    - pattern: $VAR
+  - patterns:
+    - pattern-inside: new java.io.RandomAccessFile($INPUT,...)
+    - pattern: $INPUT
+  - pattern: new java.io.FileReader(...)
+  - pattern: new javax.activation.FileDataSource(...)
+  - pattern: new java.io.FileInputStream(...)
+  - pattern: new java.io.FileOutputStream(...)
+  - pattern: new java.io.File(...)
+  - pattern: java.nio.file.Paths.get(...)
+  - pattern: java.io.File.createTempFile(...)
+  - pattern: java.io.File.createTempDirectory(...)
+  - pattern: java.nio.file.Files.createTempFile(...)
+  - pattern: java.nio.file.Files.createTempDirectory(...)
+  - patterns:
+    - pattern: $SRC.$METHOD(...)
+    - metavariable-pattern:
+        metavariable: $SRC
+        pattern-either:
+        - pattern: getClass()
+        - pattern: getClass().getClassLoader()
+        - pattern: (ClassLoader $C)
+        - pattern: (Class $C)
+        - pattern: $CLZ.getClassLoader()
+    - metavariable-pattern:
+        metavariable: $METHOD
+        pattern-either:
+        - pattern: getResourceAsStream
+        - pattern: getResource
+  - patterns:
+    - pattern-inside: new java.io.FileWriter($PATH, ...)
+    - pattern: $PATH
+  - patterns:
+    - pattern-inside: new java.io.FileOutputStream($PATH, ...)
+    - pattern: $PATH
+  message: |
+    The application dynamically constructs file or path information. If the path
+    information comes from user input, it could be abused to read sensitive files,
+    access other users' data, or aid in exploitation to gain further system access.
+
+    User input should never be used in constructing paths or files for interacting
+    with the filesystem. This includes filenames supplied by user uploads or downloads.
+    If possible, consider hashing user input or replacing it with unique values and
+    use `Path.resolve` to resolve and validate the path information
+    prior to processing any file functionality.
+
+    Example using `Path.resolve` and not allowing direct user input:
+    ```
+    // Class to store our user data along with a randomly generated file name
+    public static class UserData {
+        private String userFileNameUnsafe;
+        private String fileName;
+        public UserData(String userFileName) {
+            this.userFileNameUnsafe = userFileName;
+            // Generate a random ID for the filename
+            this.fileName = UUID.randomUUID().toString();
+        }
+        public String getUserFileNameUnsafe() { return userFileNameUnsafe; };
+        public String getFileName() { return fileName; };
+    }
+
+    public static void main(String[] args) throws Exception {
+        // User input, saved only as a reference
+        UserData userData = new UserData("..\\test.txt");
+        // Restrict all file processing to this directory only
+        String base = "/var/app/restricted";
+        Path basePath = Paths.get(base);
+        // Resolve the full path, but only use our random generated filename
+        Path fullPath = basePath.resolve(userData.getFileName());
+        // verify the path is contained within our basePath
+        if (!fullPath.startsWith(base)) {
+            throw new Exception("Invalid path specified!");
+        }
+        // process / work with file
+    }
+    ```
+
+    For more information on path traversal issues see OWASP:
+    https://owasp.org/www-community/attacks/Path_Traversal
+  metadata:
+    shortDescription: Improper limitation of a pathname to a restricted directory
+      ('Path Traversal')
+    cwe: CWE-22
+    owasp:
+    - A5:2017-Broken Access Control
+    - A01:2021-Broken Access Control
+    security-severity: Medium
+    technology:
+    - java
+    category: security
+    primary_identifier: find_sec_bugs.PT_ABSOLUTE_PATH_TRAVERSAL-1
+    secondary_identifiers:
+    - name: Find Security Bugs-PT_ABSOLUTE_PATH_TRAVERSAL
+      type: find_sec_bugs_type
+      value: PT_ABSOLUTE_PATH_TRAVERSAL
+    license: MIT
+    vulnerability_class:
+    - Other
+    source: https://semgrep.dev/r/gitlab.find_sec_bugs.PT_ABSOLUTE_PATH_TRAVERSAL-1
+    shortlink: https://sg.run/Ben5
+    semgrep.dev:
+      rule:
+        r_id: 21207
+        rv_id: 920188
+        rule_id: KxUwlN
+        version_id: nWTnNoQ
+        url: https://semgrep.dev/playground/r/nWTnNoQ/gitlab.find_sec_bugs.PT_ABSOLUTE_PATH_TRAVERSAL-1
+        origin: community

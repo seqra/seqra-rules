@@ -66,16 +66,17 @@ rules:
       $NAME = org.apache.commons.io.FilenameUtils.getName(...);
       ...
       $SAFE = concat($BASE, $NAME);
-  - pattern: |
-      $RET $FUN(...){
-        ...
-        $PATH = $BP.resolve(...);
-        ...
-        if(!$PATH.startsWith(...)) {
-          throw new $EXC(...);
-        }
-        ...
-      }
+  # TODO: Support conditional sanitizers
+  # - pattern: |
+  #     $RET $FUN(...){
+  #       ...
+  #       $PATH = $BP.resolve(...);
+  #       ...
+  #       if(!$PATH.startsWith(...)) {
+  #         throw new $EXC(...);
+  #       }
+  #       ...
+  #     }
   pattern-sources:
   - pattern: "(HttpServletRequest $REQ)"
   pattern-sinks:

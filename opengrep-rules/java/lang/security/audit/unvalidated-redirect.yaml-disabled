@@ -29,18 +29,22 @@ rules:
   languages: [java]
   pattern-either:
   - pattern: |
+      @$ANNOTATION(...)
       $X $METHOD(...,HttpServletResponse $RES,...,String $URL,...) {
         ...
         $RES.sendRedirect($URL);
         ...
       }
   - pattern: |
+      @$ANNOTATION(...)
       $X $METHOD(...,String $URL,...,HttpServletResponse $RES,...) {
         ...
         $RES.sendRedirect($URL);
         ...
       }
+      @$ANNOTATION(...)
   - pattern: |
+      @$ANNOTATION(...)
       $X $METHOD(...,HttpServletRequest $REQ,...,HttpServletResponse $RES,...) {
         ...
         String $URL = $REQ.getParameter(...);
@@ -49,6 +53,7 @@ rules:
         ...
       }
   - pattern: |
+      @$ANNOTATION(...)
       $X $METHOD(...,HttpServletResponse $RES,...,HttpServletRequest $REQ,...) {
         ...
         String $URL = $REQ.getParameter(...);
@@ -57,6 +62,7 @@ rules:
         ...
       }
   - pattern: |
+      @$ANNOTATION(...)
       $X $METHOD(...,String $URL,...) {
         ...
         HttpServletResponse $RES = ...;
@@ -65,30 +71,35 @@ rules:
         ...
       }
   - pattern: |
+      @$ANNOTATION(...)
       $X $METHOD(...,HttpServletRequest $REQ,...,HttpServletResponse $RES,...) {
         ...
         $RES.sendRedirect($REQ.getParameter(...));
         ...
       }
   - pattern: |
+      @$ANNOTATION(...)
       $X $METHOD(...,HttpServletResponse $RES,...,HttpServletRequest $REQ,...) {
         ...
         $RES.sendRedirect($REQ.getParameter(...));
         ...
       }
   - pattern: |
+      @$ANNOTATION(...)
       $X $METHOD(...,HttpServletResponse $RES,...,String $URL,...) {
         ...
         $RES.addHeader("Location",$URL);
         ...
       }
   - pattern: |
+      @$ANNOTATION(...)
       $X $METHOD(...,String $URL,...,HttpServletResponse $RES,...) {
         ...
         $RES.addHeader("Location",$URL);
         ...
       }
   - pattern: |
+      @$ANNOTATION(...)
       $X $METHOD(...,HttpServletRequest $REQ,...,HttpServletResponse $RES,...) {
         ...
         String $URL = $REQ.getParameter(...);
@@ -97,6 +108,7 @@ rules:
         ...
       }
   - pattern: |
+      @$ANNOTATION(...)
       $X $METHOD(...,HttpServletResponse $RES,...,HttpServletRequest $REQ,...) {
         ...
         String $URL = $REQ.getParameter(...);
@@ -105,6 +117,7 @@ rules:
         ...
       }
   - pattern: |
+      @$ANNOTATION(...)
       $X $METHOD(...,String $URL,...) {
         ...
         HttpServletResponse $RES = ...;
@@ -113,14 +126,25 @@ rules:
         ...
       }
   - pattern: |
+      @$ANNOTATION(...)
       $X $METHOD(...,HttpServletRequest $REQ,...,HttpServletResponse $RES,...) {
         ...
         $RES.addHeader("Location",$REQ.getParameter(...));
         ...
       }
   - pattern: |-
+      @$ANNOTATION(...)
       $X $METHOD(...,HttpServletResponse $RES,...,HttpServletRequest $REQ,...) {
         ...
         $RES.addHeader("Location",$REQ.getParameter(...));
         ...
       }
+  - metavariable-pattern:
+      metavariable: $ANNOTATION
+      pattern-either:
+      - pattern: RequestMapping
+      - pattern: DeleteMapping
+      - pattern: GetMapping
+      - pattern: PatchMapping
+      - pattern: PostMapping
+      - pattern: PutMapping

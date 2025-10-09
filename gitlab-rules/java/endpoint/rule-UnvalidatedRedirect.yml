@@ -37,28 +37,64 @@ rules:
   mode: "taint"
   pattern-sources:
   - patterns:
-    - pattern: |
-        $URL = ($X.servlet.http.HttpServletRequest $REQ).$M(...);
+    - pattern-either:
+      - pattern-inside: |
+          @$ANNOTATION(...)
+          $RETURNTYPE $METHOD(..., $X.servlet.http.HttpServletRequest $REQ,...) {
+            ...
+          }
+      - pattern-inside: |
+          @$ANNOTATION(...)
+          $RETURNTYPE $METHOD(..., @$REQUIRED(...) $X.servlet.http.HttpServletRequest $REQ,...) {
+            ...
+          }
+      - pattern-inside: |
+          @$ANNOTATION(...)
+          $RETURNTYPE $METHOD(..., @$REQUIRED $X.servlet.http.HttpServletRequest $REQ,...) {
+            ...
+          }
+    - patterns:
+      - focus-metavariable: $URL
+      - pattern: |
+          $URL = ($X.servlet.http.HttpServletRequest $REQ).$M(...);
+      - metavariable-regex:
+          metavariable: "$M"
+          regex: "(getParameter|getCookies|getHeader|getHeaders|getHeaderNames|getPathInfo|getPathTranslated|getContextPath|getQueryString|getRemoteUser|getRequestedSessionId|getRequestURI|getRequestURL|getServletPath|getParts|getPart|getReader)"
+    - metavariable-pattern:
+        metavariable: $METHOD
+        patterns:
+          - pattern-not:
+             org.springframework.security.web.authentication.AuthenticationSuccessHandler.onAuthenticationSuccess
+    - metavariable-pattern:
+        metavariable: $ANNOTATION
+        pattern-either:
+        - pattern: RequestMapping
+        - pattern: DeleteMapping
+        - pattern: GetMapping
+        - pattern: PatchMapping
+        - pattern: PostMapping
+        - pattern: PutMapping
     - metavariable-regex:
-        metavariable: "$M"
-        regex: "(getParameter|getCookies|getHeader|getHeaders|getHeaderNames|getPathInfo|getPathTranslated|getContextPath|getQueryString|getRemoteUser|getRequestedSessionId|getRequestURI|getRequestURL|getServletPath|getParts|getPart|getReader)"
+        metavariable: $REQUIRED
+        regex: (RequestBody|PathVariable|RequestParam|RequestHeader|CookieValue|ModelAttribute)
   pattern-sinks:
   - pattern-either:
     - pattern: |
         ($X.servlet.http.HttpServletResponse $RES).sendRedirect($URL)
     - pattern: |
         ($X.servlet.http.HttpServletResponse $RES).addHeader("Location", $URL)
-  pattern-sanitizers:
-  - patterns:
-    - pattern-inside: |
-        if ($SAFE.contains($URL)){
-          ...
-        }
-    - pattern-either:
-      - pattern: |
-          ($X.servlet.http.HttpServletResponse $RES).sendRedirect($URL)
-      - pattern: |
-          ($X.servlet.http.HttpServletResponse $RES).addHeader("Location", $URL)
+  # TODO: Support conditional sanitizers
+  # pattern-sanitizers:
+  # - patterns:
+  #   - pattern-inside: |
+  #       if ($SAFE.contains($URL)){
+  #         ...
+  #       }
+  #   - pattern-either:
+  #     - pattern: |
+  #         ($X.servlet.http.HttpServletResponse $RES).sendRedirect($URL)
+  #     - pattern: |
+  #         ($X.servlet.http.HttpServletResponse $RES).addHeader("Location", $URL)
   metadata:
     category: "security"
     cwe: "CWE-601"

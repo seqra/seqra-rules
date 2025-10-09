@@ -9,6 +9,25 @@ rules:
     mode: taint
     pattern-sources:
       - patterns:
+        - pattern-inside: |
+            @$ANNOTATION(...)
+            $RETURNTYPE $METHOD(..., $TYPE $SOURCE,...) {
+              ...
+            }
+        - focus-metavariable: $SOURCE
+        - metavariable-regex:
+            metavariable: $TYPE
+            regex: ^(?!(Integer|Long|Float|Double|Char|Boolean|int|long|float|double|char|boolean))
+        - metavariable-pattern:
+            metavariable: $ANNOTATION
+            pattern-either:
+            - pattern: RequestMapping
+            - pattern: DeleteMapping
+            - pattern: GetMapping
+            - pattern: PatchMapping
+            - pattern: PostMapping
+            - pattern: PutMapping
+      - patterns:
         - pattern: (javax.servlet.http.HttpServletRequest $R).$METHOD(...)
         - metavariable-regex:
             metavariable: $METHOD

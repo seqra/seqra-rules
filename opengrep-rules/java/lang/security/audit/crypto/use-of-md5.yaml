@@ -27,10 +27,12 @@ rules:
     confidence: HIGH
   patterns:
     - pattern: |
-       java.security.MessageDigest.getInstance($ALGO, ...);
+       $ALGO = "$MD5";
+       ...
+       MessageDigest.getInstance($ALGO, ...);
     - metavariable-regex:
-        metavariable: "$ALGO"
-        regex: (.MD5.)
+        metavariable: $MD5
+        regex: .*(MD5).*
     - focus-metavariable: $ALGO
   fix: |
     "SHA-512"

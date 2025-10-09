@@ -22,60 +22,83 @@ rules:
     confidence: LOW
   severity: WARNING
   languages: [java]
-  pattern-either:
-  - pattern: |
-      $X $METHOD(...,HttpServletResponse $RES,...) {
-        ...
-        $RES.encodeURL(...);
-        ...
-      }
-  - pattern: |
-      $X $METHOD(...,HttpServletResponse $RES,...) {
-        ...
-        $RES.encodeUrl(...);
-        ...
-      }
-  - pattern: |
-      $X $METHOD(...,HttpServletResponse $RES,...) {
-        ...
-        $RES.encodeRedirectURL(...);
-        ...
-      }
-  - pattern: |
-      $X $METHOD(...,HttpServletResponse $RES,...) {
-        ...
-        $RES.encodeRedirectUrl(...);
-        ...
-      }
-  - pattern: |
-      $X $METHOD(...) {
-        ...
-        HttpServletResponse $RES = ...;
-        ...
-        $RES.encodeURL(...);
-        ...
-      }
-  - pattern: |
-      $X $METHOD(...) {
-        ...
-        HttpServletResponse $RES = ...;
-        ...
-        $RES.encodeUrl(...);
-        ...
-      }
-  - pattern: |
-      $X $METHOD(...) {
-        ...
-        HttpServletResponse $RES = ...;
-        ...
-        $RES.encodeRedirectURL(...);
-        ...
-      }
-  - pattern: |-
-      $X $METHOD(...) {
-        ...
-        HttpServletResponse $RES = ...;
-        ...
-        $RES.encodeRedirectUrl(...);
-        ...
-      }
+  patterns:
+    - metavariable-pattern:
+        metavariable: $METHOD
+        patterns:
+          - pattern-not:
+             org.springframework.security.web.authentication.logout.LogoutSuccessHandler.onLogoutSuccess
+    - metavariable-pattern:
+        metavariable: $ANNOTATION
+        pattern-either:
+        - pattern: RequestMapping
+        - pattern: DeleteMapping
+        - pattern: GetMapping
+        - pattern: PatchMapping
+        - pattern: PostMapping
+        - pattern: PutMapping
+    - pattern-either:
+      - pattern: |
+          @$ANNOTATION(...)
+          $X $METHOD(...,HttpServletResponse $RES,...) {
+            ...
+            $RES.encodeURL(...);
+            ...
+          }
+      - pattern: |
+          @$ANNOTATION(...)
+          $X $METHOD(...,HttpServletResponse $RES,...) {
+            ...
+            $RES.encodeUrl(...);
+            ...
+          }
+      - pattern: |
+          @$ANNOTATION(...)
+          $X $METHOD(...,HttpServletResponse $RES,...) {
+            ...
+            $RES.encodeRedirectURL(...);
+            ...
+          }
+      - pattern: |
+          @$ANNOTATION(...)
+          $X $METHOD(...,HttpServletResponse $RES,...) {
+            ...
+            $RES.encodeRedirectUrl(...);
+            ...
+          }
+      - pattern: |
+          @$ANNOTATION(...)
+          $X $METHOD(...) {
+            ...
+            HttpServletResponse $RES = ...;
+            ...
+            $RES.encodeURL(...);
+            ...
+          }
+      - pattern: |
+          @$ANNOTATION(...)
+          $X $METHOD(...) {
+            ...
+            HttpServletResponse $RES = ...;
+            ...
+            $RES.encodeUrl(...);
+            ...
+          }
+      - pattern: |
+          @$ANNOTATION(...)
+          $X $METHOD(...) {
+            ...
+            HttpServletResponse $RES = ...;
+            ...
+            $RES.encodeRedirectURL(...);
+            ...
+          }
+      - pattern: |-
+          @$ANNOTATION(...)
+          $X $METHOD(...) {
+            ...
+            HttpServletResponse $RES = ...;
+            ...
+            $RES.encodeRedirectUrl(...);
+            ...
+          }

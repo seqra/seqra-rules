@@ -130,6 +130,36 @@ rules:
         new InetSocketAddress(..., $PORT)
     - pattern-not: |
         new InetSocketAddress("...", $PORT)
+  - patterns:
+    - pattern-either:
+      - patterns:
+        - pattern: |
+            $PARAM = $REQUEST.$MD(...);
+            ...
+        - pattern-inside: |
+            @$ANNOTATION(...)
+            $RETURNTYPE $METHOD(..., HttpServletRequest $REQUEST, ...) {
+              ...
+            }
+        - metavariable-regex:
+            metavariable: $MD
+            regex: "(getInputStream|getParameter|getCookies|getHeader|getHeaders|getHeaderNames|getPathInfo|getPathTranslated|getContextPath|getQueryString|getRemoteUser|getRequestedSessionId|getRequestURI|getRequestURL|getServletPath|getParts|getPart|getReader)"
+      - pattern-inside: |
+          @$ANNOTATION(...)
+          $RETURNTYPE $METHOD(..., String $PARAM, ...) {
+            ...
+          }
+    - pattern:
+        java.sql.DriverManager.getConnection($PARAM, ...);
+    - metavariable-pattern:
+        metavariable: $ANNOTATION
+        pattern-either:
+        - pattern: RequestMapping
+        - pattern: DeleteMapping
+        - pattern: GetMapping
+        - pattern: PatchMapping
+        - pattern: PostMapping
+        - pattern: PutMapping
   metadata:
     shortDescription: "Server-Side Request Forgery (SSRF)"
     category: "security"

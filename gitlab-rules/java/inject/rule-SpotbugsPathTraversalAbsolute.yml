@@ -49,6 +49,7 @@ rules:
     to: $STR
   pattern-sanitizers:
   - pattern: "org.apache.commons.io.FilenameUtils.getName(...)"
+  - pattern: org.apache.commons.io.FilenameUtils.getExtension(...)
   pattern-sinks:
   - patterns:
     - pattern-inside: |

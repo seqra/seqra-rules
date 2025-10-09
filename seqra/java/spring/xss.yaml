@@ -9,15 +9,43 @@ rules:
       license: MIT
       shortDescription: Return a untrusted file path
     patterns:
-      - pattern: |
-          String $FILENAME = $MULTIFILE.getOriginalFilename();
-      - pattern-inside: |
-          @$ANNOTATION(...)
-          $RETURNTYPE $METHOD(..., @RequestParam(...) MultipartFile $MULTIFILE, ...) {
-            ...
-            return $FILENAME;
-          }
-
+    - pattern: |
+        ...
+        MultipartFile $FILE = $SOURCE.$MD();
+        ...
+        String $PAYLOAD = $FILE.getOriginalFilename();
+        ...
+        $SINK = ResponseEntity. ... .body($PAYLOAD);
+        ...
+    - patterns:
+      - pattern-either:
+        - pattern-inside: |
+            @$ANNOTATION(...)
+            $RETURNTYPE $METHOD(..., $TYPE $SOURCE,...) {
+              ...
+              return $SINK;
+              ...
+            }
+        - pattern-inside: |
+            @$ANNOTATION(...)
+            $RETURNTYPE $METHOD(..., @$REQ(...) $TYPE $SOURCE,...) {
+              ...
+              return $SINK;
+              ...
+            }
+        - pattern-inside: |
+            @$ANNOTATION(...)
+            $RETURNTYPE $METHOD(..., @$REQ $TYPE $SOURCE,...) {
+              ...
+              return $SINK;
+              ...
+            }
+      - metavariable-regex:
+          metavariable: $TYPE
+          regex: ^(?!(Integer|Long|Float|Double|Char|Boolean|int|long|float|double|char|boolean))
+      - metavariable-regex:
+          metavariable: $REQ
+          regex: (RequestBody|PathVariable|RequestParam|RequestHeader|CookieValue|ModelAttribute)
       - metavariable-pattern:
           metavariable: $ANNOTATION
           pattern-either:

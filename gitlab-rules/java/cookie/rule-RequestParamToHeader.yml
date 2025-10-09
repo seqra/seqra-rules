@@ -16,7 +16,11 @@ rules:
     - metavariable-regex:
         metavariable: "$INPUT"
         regex: ".*\\[(?=.*\\\\r)(?=.*\\\\n).*\\]\\+"
-  - pattern: "org.apache.commons.text.StringEscapeUtils.unescapeJava(...);"
+  - patterns:
+    - pattern-inside: |
+        $STR = org.apache.commons.text.StringEscapeUtils.escapeJava(...);
+    - pattern: "$STR"
+  - pattern: "org.apache.commons.text.StringEscapeUtils.unescapeJava($STR);"
   pattern-sinks:
   - pattern: "($X.servlet.http.HttpServletResponse $RES).setHeader(\"$KEY\", ...);"
   - pattern: "($X.servlet.http.HttpServletResponse $RES).addHeader(\"$KEY\", ...);"

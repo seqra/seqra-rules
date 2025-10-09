@@ -1,3 +1,4 @@
+# TODO: Disable until we have an analysis with a more precise domain
 rules:
 - id: jjwt-none-alg
   message: >-
@@ -31,11 +32,8 @@ rules:
   languages: [java]
   severity: ERROR
   patterns:
-  - pattern: |
-      io.jsonwebtoken.Jwts.builder();
-  - pattern-not-inside: |-
-      $RETURNTYPE $FUNC(...) {
+    - pattern: |
+        $JWTS = io.jsonwebtoken.Jwts.builder();
+    - pattern-not-inside: |
         ...
-        $JWTS.signWith(...);
-        ...
-      }
+        $JWTS. ... .signWith(...);

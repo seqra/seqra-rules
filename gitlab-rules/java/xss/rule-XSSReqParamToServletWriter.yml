@@ -58,6 +58,24 @@ rules:
   - pattern: org.apache.commons.text.StringEscapeUtils.escapeHtml4(...)
   - pattern: org.owasp.benchmark.helpers.Utils.encodeForHTML(...)
   pattern-sinks:
+  - patterns:
+    - pattern: |
+        @$ANNOTATION(...)
+        $RETURNTYPE $METHOD(...) {
+          ...
+          return $SINK
+          ...
+        }
+    - focus-metavariable: $SINK
+    - metavariable-pattern:
+        metavariable: $ANNOTATION
+        pattern-either:
+        - pattern: RequestMapping
+        - pattern: DeleteMapping
+        - pattern: GetMapping
+        - pattern: PatchMapping
+        - pattern: PostMapping
+        - pattern: PutMapping
   - pattern: (javax.servlet.http.HttpServletResponse $R).getWriter().print(...)
   - patterns:
     - pattern-inside: |

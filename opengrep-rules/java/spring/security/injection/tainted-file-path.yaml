@@ -2,7 +2,7 @@ rules:
 - id: tainted-file-path
   languages:
   - java
-  severity: ERROR
+  severity: WARNING
   message: >-
     Detected user input controlling a file path. An attacker could control the location of this
     file, to include going backwards in the directory with '../'. To address this, ensure that user-controlled
@@ -32,11 +32,18 @@ rules:
   - patterns:
     - pattern-either:
       - pattern-inside: |
-          $METHODNAME(..., @$REQ(...) $TYPE $SOURCE,...) {
+          @$ANNOTATION(...)
+          $RETURNTYPE $METHOD(..., @$REQ(...) $TYPE $SOURCE,...) {
             ...
           }
       - pattern-inside: |
-          $METHODNAME(..., @$REQ $TYPE $SOURCE,...) {
+          @$ANNOTATION(...)
+          $RETURNTYPE $METHOD(..., @$REQ $TYPE $SOURCE,...) {
+            ...
+          }
+      - pattern-inside: |
+          @$ANNOTATION(...)
+          $RETURNTYPE $METHOD(..., $TYPE $SOURCE,...) {
             ...
           }
     - metavariable-regex:
@@ -45,6 +52,15 @@ rules:
     - metavariable-regex:
         metavariable: $REQ
         regex: (RequestBody|PathVariable|RequestParam|RequestHeader|CookieValue|ModelAttribute)
+    - metavariable-pattern:
+        metavariable: $ANNOTATION
+        pattern-either:
+        - pattern: RequestMapping
+        - pattern: DeleteMapping
+        - pattern: GetMapping
+        - pattern: PatchMapping
+        - pattern: PostMapping
+        - pattern: PutMapping
     - focus-metavariable: $SOURCE
   pattern-sinks:
   - patterns:
@@ -56,6 +72,8 @@ rules:
       - pattern: new FileInputStream(...)
       - pattern: new java.io.FileInputStream(...)
       - pattern: (Paths $PATHS).get(...)
+      - pattern: java.nio.file.Paths.get(...)
+      - pattern: java.io.File.createTempFile(...)
       - patterns:
         - pattern: |
             $CLASS.$FUNC(...)
@@ -74,3 +92,5 @@ rules:
         - focus-metavariable: $FILE
   pattern-sanitizers:
   - pattern: org.apache.commons.io.FilenameUtils.getName(...)
+  - pattern: org.apache.commons.io.FilenameUtils.getExtension(...)
+  - pattern: io.github.pixee.security.Filenames.toSimpleFileName(...)
