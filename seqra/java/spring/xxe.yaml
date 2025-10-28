@@ -1,5 +1,5 @@
 rules:
-  - id: java.spring.xxe
+  - id: xxe
     languages:
       - java
     severity: ERROR

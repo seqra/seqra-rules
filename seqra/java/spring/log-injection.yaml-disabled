@@ -1,5 +1,5 @@
 rules:
-  - id: java.spring.log-injection
+  - id: log-injection
     languages:
       - java
     severity: ERROR

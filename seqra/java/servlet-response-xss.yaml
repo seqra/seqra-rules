@@ -7,10 +7,19 @@ rules:
     severity: ERROR
     patterns:
       - pattern-inside: |
-          @RequestMapping($PATH)
-          public String $F(..., HttpServletRequest $R, ...) {
+          @ANNOTATION(...)
+          $RETURNTYPE $METHOD(..., HttpServletRequest $R, ...) {
           ...
           }
+      - metavariable-pattern:
+          metavariable: $ANNOTATION
+          pattern-either:
+          - pattern: RequestMapping
+          - pattern: DeleteMapping
+          - pattern: GetMapping
+          - pattern: PatchMapping
+          - pattern: PostMapping
+          - pattern: PutMapping
       - pattern-either:
           - pattern: |
               String $P = $R.getParameter($PP);

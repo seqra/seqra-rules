@@ -1,5 +1,5 @@
 rules:
-  - id: java.spring.path-injection
+  - id: path-injection
     languages:
       - java
     severity: ERROR

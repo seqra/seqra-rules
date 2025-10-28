@@ -8,15 +8,19 @@ rules:
     patterns:
       - pattern-either:
         - pattern-inside: |
-            @RequestMapping(...)
-            public String $M(..., String $RAW_URL, ...) {
+            @ANNOTATION(...)
+            $RETURNTYPE $METHOD(..., String $RAW_URL, ...) {
             ...
             }
-        - pattern-inside: |
-            @GetMapping(...)
-            public String $M(..., String $RAW_URL, ...) {
-            ...
-            }
+      - metavariable-pattern:
+          metavariable: $ANNOTATION
+          pattern-either:
+          - pattern: RequestMapping
+          - pattern: DeleteMapping
+          - pattern: GetMapping
+          - pattern: PatchMapping
+          - pattern: PostMapping
+          - pattern: PutMapping
       - pattern-either:
         - pattern-inside: |
             URL $URL = new URL($RAW_URL);

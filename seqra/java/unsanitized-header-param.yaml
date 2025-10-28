@@ -1,37 +1,25 @@
 rules:
-  - id: xss
-    languages:
-      - java
-    severity: ERROR
-    message: Return an untrusted data from a file
+  - id: unsanitized-header-param
+    message: "Unsanitized value in header that depends on user input allows a response-splitting vulnerability"
     metadata:
-      cwe: CWE-79
-      license: MIT
-      shortDescription: Return a untrusted file path
+      shortDescription: "Improper Neutralization of CRLF Sequences in HTTP Headers ('HTTP Request/Response Splitting')"
+      cwe: CWE-113
+    severity: ERROR
     patterns:
-    - pattern: |
-        MultipartFile $SINK = $SOURCE.$MD();
-    - patterns:
       - pattern-either:
         - pattern-inside: |
             @$ANNOTATION(...)
-            $RETURNTYPE $METHOD(..., $TYPE $SOURCE,...) {
-              ...
-              return $SINK;
+            $RETURNTYPE $METHOD(..., $TYPE $SOURCE, ...) {
               ...
             }
         - pattern-inside: |
             @$ANNOTATION(...)
-            $RETURNTYPE $METHOD(..., @$REQ(...) $TYPE $SOURCE,...) {
-              ...
-              return $SINK;
+            $RETURNTYPE $METHOD(..., @$REQ(...) $TYPE $SOURCE, ...) {
               ...
             }
         - pattern-inside: |
             @$ANNOTATION(...)
-            $RETURNTYPE $METHOD(..., @$REQ $TYPE $SOURCE,...) {
-              ...
-              return $SINK;
+            $RETURNTYPE $METHOD(..., @$REQ $TYPE $SOURCE, ...) {
               ...
             }
       - metavariable-regex:
@@ -40,6 +28,7 @@ rules:
       - metavariable-regex:
           metavariable: $REQ
           regex: (RequestBody|PathVariable|RequestParam|RequestHeader|CookieValue|ModelAttribute)
+      - focus-metavariable: $SOURCE
       - metavariable-pattern:
           metavariable: $ANNOTATION
           pattern-either:
@@ -49,3 +38,11 @@ rules:
           - pattern: PatchMapping
           - pattern: PostMapping
           - pattern: PutMapping
+
+      - pattern: |
+          (HttpServletResponse $RESPONSE).$HEADER_SET("...", $SOURCE);
+      - metavariable-regex:
+          metavariable: $HEADER_SET
+          regex: ^(addHeader|setHeader)
+    languages:
+      - java

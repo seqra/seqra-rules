@@ -5,7 +5,7 @@ rules:
     The 'none' algorithm assumes the integrity of the token has already
     been verified. This would allow a malicious actor to forge a JWT token
     that will automatically be verified. Do not explicitly use the 'none'
-    algorithm. Instead, use an algorithm such as 'HS256'.
+    algorithm.
   metadata:
     cwe:
     - 'CWE-327: Use of a Broken or Risky Cryptographic Algorithm'
@@ -30,14 +30,13 @@ rules:
     impact: MEDIUM
   languages: [java]
   severity: ERROR
-  patterns:
-    - pattern: |
-        $JWTS = io.jsonwebtoken.Jwts.builder();
-        ...
-        $JWTS.compact();
-    - pattern-not-inside: |
-        $JWTS = io.jsonwebtoken.Jwts.builder();
-        ...
-        $JWTS. ... .signWith(...);
-        ...
-        $JWTS.compact();
+  pattern-sources:
+    - pattern: $JWTS = io.jsonwebtoken.Jwts.builder();
+  pattern-sanitizers:
+    - pattern: $JWTS.signWith(...)
+  pattern-propagators:
+    - pattern: $MODIFIED = $ORIGINAL.$MD(...);
+      from: $ORIGINAL
+      to: $MODIFIED
+  pattern-sinks:
+    - pattern: $JWTS.compact();

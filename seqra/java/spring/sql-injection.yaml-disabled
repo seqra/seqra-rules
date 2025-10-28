@@ -1,5 +1,5 @@
 rules:
-  - id: java.spring.sql-injection
+  - id: sql-injection
     languages:
       - java
     severity: ERROR
@@ -10,9 +10,10 @@ rules:
       license: MIT
     patterns:
       - pattern: |
-          $QUERY = ... + $USER_INPUT + ...;
-          ...
-          $STATEMENT.executeQuery($QUERY);
+          $STATEMENT.$ACTION($USER_INPUT);
+      - metavariable-regex:
+          metavariable: $ACTION
+          regex: ^(executeQuery|executeUpdate)
       - pattern-inside: |
           @$ANNOTATION(...)
           $RETURNTYPE $METHOD(..., String $USER_INPUT, ...) {

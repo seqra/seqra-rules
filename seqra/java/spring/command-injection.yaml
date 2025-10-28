@@ -1,5 +1,5 @@
 rules:
-  - id: java.spring.command-injection
+  - id: command-injection
     languages:
       - java
     severity: ERROR

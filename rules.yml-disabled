@@ -1,4 +1,145 @@
 rules:
+- id: gitlab.find_sec_bugs.XXE_XMLSTREAMREADER-1
+  languages:
+  - java
+  message: |
+    External XML entities are a feature of XML parsers that allow documents to contain references
+    to
+    other documents or data. This feature can be abused to read files, communicate with external
+    hosts,
+    exfiltrate data, or cause a Denial of Service (DoS).
+
+    In most XML parsers, the recommendation to protect against XXE is to disable the doctype
+    feature.
+    Unfortunately use of the `XMLInputFactory` requires that the doctypes feature be enabled.
+    Instead
+    the application can set the `ACCESS_EXTERNAL_DTD` to an empty string and disable
+    `javax.xml.stream.isSupportingExternalEntities`.
+
+
+    Creates an `XMLInputFactory` stream parser, but disables accessing external DTD or entities:
+    ```
+    // Create an XMLInputFactory
+    XMLInputFactory factory = XMLInputFactory.newFactory();
+    // Set the ACCESS_EXTERNAL_DTD property to an empty string so it won't access
+    // entities using protocols
+    // (ref:
+    https://docs.oracle.com/javase/8/docs/api/javax/xml/XMLConstants.html#ACCESS_EXTERNAL_DTD)
+    factory.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+    // Additionally, disable support for resolving external entities
+    factory.setProperty("javax.xml.stream.isSupportingExternalEntities", false);
+    // Continue to work with the factory/stream parser
+    ```
+
+    For more information on XML security see OWASP's guide:
+    https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html#java
+  metadata:
+    shortDescription: Improper restriction of XML external entity reference ('XXE')
+    category: security
+    cwe: CWE-611
+    primary_identifier: find_sec_bugs.XXE_XMLSTREAMREADER-1
+    secondary_identifiers:
+    - name: Find Security Bugs-XXE_XMLSTREAMREADER
+      type: find_sec_bugs_type
+      value: XXE_XMLSTREAMREADER
+    license: MIT
+    vulnerability_class:
+    - Other
+    source: https://semgrep.dev/r/gitlab.find_sec_bugs.XXE_XMLSTREAMREADER-1
+    shortlink: https://sg.run/R5zK
+    semgrep.dev:
+      rule:
+        r_id: 21249
+        rv_id: 835552
+        rule_id: 8GUv2b
+        version_id: 7ZTxRq3
+        url: https://semgrep.dev/playground/r/7ZTxRq3/gitlab.find_sec_bugs.XXE_XMLSTREAMREADER-1
+        origin: community
+  patterns:
+  - pattern-inside: |
+      $SF = XMLInputFactory.newFactory();
+      ...
+  - pattern-not-inside: |
+      $SF.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+      ...
+  - pattern-not-inside: |
+      $SF.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
+      ...
+  - pattern-not-inside: |
+      $SF.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
+      ...
+  - pattern-not-inside: |
+      $SF.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, Boolean.FALSE);
+      ...
+  - pattern: $SF.createXMLStreamReader(...)
+  severity: ERROR
+- id: mobsf.mobsfscan.xxe.xmlfactory_external_entities_enabled.xmlinputfactory_xxe_enabled
+  pattern: $XMLFACTORY.setProperty("javax.xml.stream.isSupportingExternalEntities",
+    true);
+  message: |
+    XML external entities are enabled for this XMLInputFactory. This is vulnerable to XML external entity attacks. Disable external entities by setting "javax.xml.stream.isSupportingExternalEntities" to false.
+  languages:
+  - java
+  severity: ERROR
+  metadata:
+    cwe: CWE-611
+    owasp-mobile: m8
+    masvs: platform-2
+    reference: https://github.com/MobSF/owasp-mstg/blob/master/Document/0x04h-Testing-Code-Quality.md#injection-flaws-mstg-arch-2-and-mstg-platform-2
+    license: LGPL-3.0-or-later
+    vulnerability_class:
+    - Other
+    source: https://semgrep.dev/r/mobsf.mobsfscan.xxe.xmlfactory_external_entities_enabled.xmlinputfactory_xxe_enabled
+    shortlink: https://sg.run/0qwv
+    semgrep.dev:
+      rule:
+        r_id: 43754
+        rv_id: 833249
+        rule_id: 10UnwQ
+        version_id: YDTl0kz
+        url: https://semgrep.dev/playground/r/YDTl0kz/mobsf.mobsfscan.xxe.xmlfactory_external_entities_enabled.xmlinputfactory_xxe_enabled
+        origin: community
+- id: mobsf.mobsfscan.xxe.xmlfactory_xxe.xmlinputfactory_xxe
+  patterns:
+  - pattern-not-inside: |
+      $RETURNTYPE $METHOD(...) {
+        ...
+        $XMLFACTORY.setProperty("javax.xml.stream.isSupportingExternalEntities", false);
+        ...
+      }
+  - pattern-not-inside: |
+      $RETURNTYPE $METHOD(...) {
+        ...
+        $XMLFACTORY.setProperty(java.xml.stream.XMLFactoryInput.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
+        ...
+      }
+  - pattern-either:
+    - pattern: $XMLFACTORY = $W.newFactory(...);
+    - pattern: $XMLFACTORY = new XMLInputFactory(...);
+    - pattern: $XMLFACTORY = XMLInputFactory.newInstance();
+  message: |
+    XML external entities are not explicitly disabled for this XMLInputFactory. This could be vulnerable to XML external entity vulnerabilities. Explicitly disable external entities by setting "javax.xml.stream.isSupportingExternalEntities" to false.
+  severity: ERROR
+  languages:
+  - java
+  metadata:
+    cwe: CWE-611
+    owasp-mobile: m8
+    masvs: platform-2
+    reference: https://github.com/MobSF/owasp-mstg/blob/master/Document/0x04h-Testing-Code-Quality.md#injection-flaws-mstg-arch-2-and-mstg-platform-2
+    license: LGPL-3.0-or-later
+    vulnerability_class:
+    - Other
+    source: https://semgrep.dev/r/mobsf.mobsfscan.xxe.xmlfactory_xxe.xmlinputfactory_xxe
+    shortlink: https://sg.run/KzZ7
+    semgrep.dev:
+      rule:
+        r_id: 43755
+        rv_id: 833250
+        rule_id: 9AUL9X
+        version_id: JdTlrG4
+        url: https://semgrep.dev/playground/r/JdTlrG4/mobsf.mobsfscan.xxe.xmlfactory_xxe.xmlinputfactory_xxe
+        origin: community
 - id: gitlab.find_sec_bugs.XSS_SERVLET-2.XSS_SERVLET_PARAMETER-1
   languages:
   - java

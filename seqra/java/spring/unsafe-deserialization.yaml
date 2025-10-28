@@ -1,41 +1,49 @@
 rules:
-  - id: ssrf
+  - id: unsafe-deserialization
     languages:
       - java
     severity: ERROR
-    message: "The web server receives a URL or similar request from an upstream component and retrieves the contents of this URL, but it does not sufficiently ensure that the request is being sent to the expected destination."
+    message: |
+        Found object deserialization using ObjectInputStream with user-controlled input.
+        Deserialization of entire Java objects is dangerous because malicious actors can
+        create Java object streams with unintended consequences.
     metadata:
-      shortDescription: "Server-Side Request Forgery (SSRF)"
-      cwe: CWE-918
-      license: MIT
+      cwe: CWE-502
+      owasp:
+      - A08:2017 - Insecure Deserialization
+      - A08:2021 - Software and Data Integrity Failures
+      category: security
+      technology:
+      - java
+      cwe2022-top25: true
+      cwe2021-top25: true
+      likelihood: LOW
+      impact: HIGH
+      confidence: MEDIUM
+      shortDescription: Untrusted object deserialization using ObjectInputStream
     patterns:
-      - pattern-either:
-        - pattern: new URL($SOURCE).$FUNC(...)
-        - pattern: (java.net.URL $URL).$FUNC(..., $SOURCE, ...)
-        - pattern: URI.create($SOURCE).toURL().$FUNC()
-      - metavariable-pattern:
-          metavariable: "$FUNC"
-          pattern-either:
-          - pattern: "connect"
-          - pattern: "GetContent"
-          - pattern: "openConnection"
-          - pattern: "openStream"
-          - pattern: "getContent"
-
+    - pattern: $OIS = new ObjectInputStream($SOURCE);
+    - patterns:
       - pattern-either:
         - pattern-inside: |
             @$ANNOTATION(...)
             $RETURNTYPE $METHOD(..., $TYPE $SOURCE,...) {
+              ...
+              return $SINK;
               ...
             }
         - pattern-inside: |
             @$ANNOTATION(...)
             $RETURNTYPE $METHOD(..., @$REQ(...) $TYPE $SOURCE,...) {
               ...
+              return $SINK;
+              ...
             }
         - pattern-inside: |
             @$ANNOTATION(...)
             $RETURNTYPE $METHOD(..., @$REQ $TYPE $SOURCE,...) {
+              ...
+              return $SINK;
               ...
             }
       - metavariable-regex:
@@ -44,7 +52,6 @@ rules:
       - metavariable-regex:
           metavariable: $REQ
           regex: (RequestBody|PathVariable|RequestParam|RequestHeader|CookieValue|ModelAttribute)
-      - focus-metavariable: $SOURCE
       - metavariable-pattern:
           metavariable: $ANNOTATION
           pattern-either:

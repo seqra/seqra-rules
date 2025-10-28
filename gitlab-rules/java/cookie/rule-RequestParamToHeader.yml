@@ -29,12 +29,43 @@ rules:
   - pattern: "($X.servlet.http.HttpServletResponseWrapper $WRP).addHeader(\"$KEY\",
       ...);"
   pattern-sources:
-  - pattern: "($X.servlet.http.HttpServletRequest $REQ).getParameter(...);"
-  - pattern: "($X.servlet.http.HttpServletRequest $REQ).getParameterNames();"
-  - pattern: "($X.servlet.http.HttpServletRequest $REQ).getParameterValues(...);"
-  - pattern: "($X.servlet.http.HttpServletRequest $REQ).getParameterMap();"
-  - pattern: "($X.servlet.http.HttpServletRequest $REQ).getHeader(...);"
-  - pattern: "($X.servlet.http.HttpServletRequest $REQ).getPathInfo();"
+  - patterns:
+    - pattern-either:
+      - patterns:
+        - pattern-inside: |
+            @$ANNOTATION(...)
+            $RETURNTYPE $METHOD(..., HttpServletRequest $REQ,...) {
+              ...
+            }
+        - metavariable-pattern:
+            metavariable: $ANNOTATION
+            pattern-either:
+            - pattern: RequestMapping
+            - pattern: DeleteMapping
+            - pattern: GetMapping
+            - pattern: PatchMapping
+            - pattern: PostMapping
+            - pattern: PutMapping
+      - patterns:
+        - pattern-inside: |
+            $RETURNTYPE $RESTMETHOD(..., HttpServletRequest $REQ,...) {
+              ...
+            }
+        - metavariable-pattern:
+            metavariable: $RESTMETHOD
+            pattern-either:
+            - pattern: doDelete
+            - pattern: doGet
+            - pattern: doPost
+            - pattern: doDelete
+            - pattern: doTrace
+    - pattern-either:
+      - pattern: "($X.servlet.http.HttpServletRequest $REQ).getParameter(...);"
+      - pattern: "($X.servlet.http.HttpServletRequest $REQ).getParameterNames();"
+      - pattern: "($X.servlet.http.HttpServletRequest $REQ).getParameterValues(...);"
+      - pattern: "($X.servlet.http.HttpServletRequest $REQ).getParameterMap();"
+      - pattern: "($X.servlet.http.HttpServletRequest $REQ).getHeader(...);"
+      - pattern: "($X.servlet.http.HttpServletRequest $REQ).getPathInfo();"
   message: |
     HTTP Response Splitting is a vulnerability where Carriage Return (CR `\r`) and Line Feed (LF
     `\n`)
