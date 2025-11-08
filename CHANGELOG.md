@@ -1,3 +1,6 @@
+## v1.2.0
+### feat: Add SQLI rule and apply various fixes
+- feat: Add a rule for SQLI and some fixes
 ## v1.1.0
 ### feat: Update and generalize rules, refine sources and fix SSRF/JWT rules
 - feat: Rename and update seqra specific rules

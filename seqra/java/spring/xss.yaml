@@ -3,49 +3,74 @@ rules:
     languages:
       - java
     severity: ERROR
-    message: Return an untrusted data from a file
+    message: Controller returns an untrusted unvalidated data
     metadata:
       cwe: CWE-79
       license: MIT
       shortDescription: Return a untrusted file path
     patterns:
-    - pattern: |
-        MultipartFile $SINK = $SOURCE.$MD();
-    - patterns:
-      - pattern-either:
-        - pattern-inside: |
+    - pattern-either:
+      - patterns:
+        - pattern: |
             @$ANNOTATION(...)
-            $RETURNTYPE $METHOD(..., $TYPE $SOURCE,...) {
+            $RETURNTYPE $METHOD(..., $TYPE $PARAM,...) {
               ...
-              return $SINK;
+              return $PARAM;
               ...
             }
-        - pattern-inside: |
+        - pattern-not-inside: |
             @$ANNOTATION(...)
-            $RETURNTYPE $METHOD(..., @$REQ(...) $TYPE $SOURCE,...) {
+            $RETURNTYPE $METHOD(..., $TYPE $PARAM,...) {
               ...
-              return $SINK;
+              $RESPONSE = HtmlUtils.htmlEscape($PARAM);
+              ...
+              return $RESPONSE;
               ...
             }
-        - pattern-inside: |
-            @$ANNOTATION(...)
-            $RETURNTYPE $METHOD(..., @$REQ $TYPE $SOURCE,...) {
-              ...
-              return $SINK;
-              ...
-            }
-      - metavariable-regex:
-          metavariable: $TYPE
-          regex: ^(?!(Integer|Long|Float|Double|Char|Boolean|int|long|float|double|char|boolean))
-      - metavariable-regex:
-          metavariable: $REQ
-          regex: (RequestBody|PathVariable|RequestParam|RequestHeader|CookieValue|ModelAttribute)
-      - metavariable-pattern:
-          metavariable: $ANNOTATION
-          pattern-either:
-          - pattern: RequestMapping
-          - pattern: DeleteMapping
-          - pattern: GetMapping
-          - pattern: PatchMapping
-          - pattern: PostMapping
-          - pattern: PutMapping
+        - metavariable-regex:
+            metavariable: $TYPE
+            regex: ^(?!(Integer|Long|Float|Double|Char|Boolean|int|long|float|double|char|boolean))
+        - metavariable-regex:
+            metavariable: $REQ
+            regex: (RequestBody|PathVariable|RequestParam|RequestHeader|CookieValue|ModelAttribute)
+        - metavariable-pattern:
+            metavariable: $ANNOTATION
+            pattern-either:
+            - pattern: RequestMapping
+            - pattern: DeleteMapping
+            - pattern: GetMapping
+            - pattern: PatchMapping
+            - pattern: PostMapping
+            - pattern: PutMapping
+      - patterns:
+          - patterns:
+            - pattern: |
+                MultipartFile $RESPONSE = $SOURCE.$MD();
+            - pattern-not-inside: |
+                MultipartFile $FILE = $SOURCE.$MD();
+                ...
+                $RESPONSE = Filenames.toSimpleFileName($FILE);
+          - patterns:
+            - pattern-either:
+              - pattern-inside: |
+                  @$ANNOTATION(...)
+                  $RETURNTYPE $METHOD(..., $TYPE $PARAM,...) {
+                    ...
+                    return $RESPONSE;
+                    ...
+                  }
+            - metavariable-regex:
+                metavariable: $TYPE
+                regex: ^(?!(Integer|Long|Float|Double|Char|Boolean|int|long|float|double|char|boolean))
+            - metavariable-regex:
+                metavariable: $REQ
+                regex: (RequestBody|PathVariable|RequestParam|RequestHeader|CookieValue|ModelAttribute)
+            - metavariable-pattern:
+                metavariable: $ANNOTATION
+                pattern-either:
+                - pattern: RequestMapping
+                - pattern: DeleteMapping
+                - pattern: GetMapping
+                - pattern: PatchMapping
+                - pattern: PostMapping
+                - pattern: PutMapping
