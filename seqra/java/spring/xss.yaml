@@ -7,7 +7,7 @@ rules:
     metadata:
       cwe: CWE-79
       license: MIT
-      shortDescription: Return a untrusted file path
+      shortDescription: Controller returns an untrusted unvalidated data
     patterns:
     - pattern-either:
       - patterns:

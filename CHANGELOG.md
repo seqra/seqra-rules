@@ -1,3 +1,6 @@
+## v1.2.1
+### fix: Correct `xss` rule description
+- chore: Fix `xss` rule description
 ## v1.2.0
 ### feat: Add SQLI rule and apply various fixes
 - feat: Add a rule for SQLI and some fixes
