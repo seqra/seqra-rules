@@ -1,0 +1,84 @@
+rules:
+  - id: xml-injection
+    languages:
+      - java
+    severity: ERROR
+    message: Untrusted input is parsed as an XML with safety flags disabled
+    metadata:
+      cwe: CWE-611
+      license: MIT
+      shortDescription: XML parsing of an untrusted input
+    patterns:
+    - pattern-either:
+      - patterns:
+        - pattern-not-inside: |
+            $RETURNTYPE $METHOD(...) {
+              ...
+              $XMLFACTORY.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, Boolean.FALSE);
+              ...
+            }
+        - pattern-not-inside: |
+            $RETURNTYPE $METHOD(...) {
+              ...
+              $XMLFACTORY.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
+              ...
+            }
+        - pattern-not-inside: |
+            $RETURNTYPE $METHOD(...) {
+              ...
+              $XMLFACTORY.setProperty("javax.xml.stream.isSupportingExternalEntities", Boolean.FALSE);
+              ...
+            }
+        - pattern-not-inside: |
+            $RETURNTYPE $METHOD(...) {
+              ...
+              $XMLFACTORY.setProperty("javax.xml.stream.isSupportingExternalEntities", false);
+              ...
+            }
+      - patterns:
+        - pattern-not-inside: |
+            $RETURNTYPE $METHOD(...) {
+              ...
+              $XMLFACTORY.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
+              ...
+            }
+        - pattern-not-inside: |
+            $RETURNTYPE $METHOD(...) {
+              ...
+              $XMLFACTORY.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+              ...
+            }
+    - pattern: |
+        $XMLFACTORY.createXMLStreamReader($SOURCE);
+    - patterns:
+      - pattern-either:
+        - pattern-inside: |
+            @$ANNOTATION(...)
+            $RETURNTYPE $METHOD(..., $TYPE $SOURCE, ...) {
+              ...
+            }
+        - pattern-inside: |
+            @$ANNOTATION(...)
+            $RETURNTYPE $METHOD(..., @$REQ(...) $TYPE $SOURCE, ...) {
+              ...
+            }
+        - pattern-inside: |
+            @$ANNOTATION(...)
+            $RETURNTYPE $METHOD(..., @$REQ $TYPE $SOURCE, ...) {
+              ...
+            }
+      - metavariable-regex:
+          metavariable: $TYPE
+          regex: ^(?!(Integer|Long|Float|Double|Char|Boolean|int|long|float|double|char|boolean))
+      - metavariable-regex:
+          metavariable: $REQ
+          regex: (RequestBody|PathVariable|RequestParam|RequestHeader|CookieValue|ModelAttribute)
+      - metavariable-pattern:
+          metavariable: $ANNOTATION
+          pattern-either:
+          - pattern: RequestMapping
+          - pattern: DeleteMapping
+          - pattern: GetMapping
+          - pattern: PatchMapping
+          - pattern: PostMapping
+          - pattern: PutMapping

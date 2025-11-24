@@ -12,29 +12,42 @@ rules:
     - pattern-not-inside: |
         $RETURNTYPE $METHOD(...) {
           ...
-          $XMLFACTORY.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, Boolean.FALSE);
+          $FACTORY.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
           ...
         }
-    - pattern-not-inside: |
-        $RETURNTYPE $METHOD(...) {
-          ...
-          $XMLFACTORY.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
-          ...
-        }
-    - pattern-not-inside: |
-        $RETURNTYPE $METHOD(...) {
-          ...
-          $XMLFACTORY.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
-          ...
-        }
-    - pattern-not-inside: |
-        $RETURNTYPE $METHOD(...) {
-          ...
-          $XMLFACTORY.setProperty(XMLInputFactory.SUPPORT_DTD, false);
-          ...
-        }
+    - pattern-either:
+      - pattern-not-inside: |
+          $RETURNTYPE $METHOD(...) {
+            ...
+            $FACTORY.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
+            ...
+          }
+      - pattern-not-inside: |
+          $RETURNTYPE $METHOD(...) {
+            ...
+            $FACTORY.setAttribute("=~/.*accessExternalStylesheet.*/", "");
+            ...
+          }
+    - pattern-either:
+      - pattern-not-inside: |
+          $RETURNTYPE $METHOD(...) {
+            ...
+            $FACTORY.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+            ...
+          }
+      - pattern-not-inside: |
+          $RETURNTYPE $METHOD(...) {
+            ...
+            $FACTORY.setAttribute("=~/.*accessExternalDTD.*/", "");
+            ...
+          }
+    - pattern-inside: |
+        $FACTORY = TransformerFactory.newInstance();
+        ...
     - pattern: |
-        $XMLFACTORY.createXMLStreamReader($SOURCE);
+        $T = $FACTORY.newTransformer(...);
+        ...
+        $T.transform($SORUCE, ...);
     - patterns:
       - pattern-either:
         - pattern-inside: |

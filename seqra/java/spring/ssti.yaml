@@ -1,0 +1,83 @@
+rules:
+  - id: spring-ssti
+    languages:
+      - java
+    severity: ERROR
+    message: Unvalidated user data flows into template engine
+    metadata:
+      cwe: CWE-1139
+      license: MIT
+      shortDescription: Unvalidated user data flows into template engine
+    patterns:
+      - pattern-either:
+          - pattern:
+              new freemarker.template.Template(..., $PARAM, ...);
+          - pattern:
+              (com.mitchellbosecke.pebble.PebbleEngine $PEBBLE).getLiteralTemplate($PARAM, ...);
+          - pattern:
+              (com.mitchellbosecke.pebble.PebbleEngine $PEBBLE).getTemplate($PARAM, ...);
+          - pattern:
+              (com.hubspot.jinjava.Jinjava $JINJAVA).render($PARAM, ...);
+          - pattern:
+              (com.hubspot.jinjava.Jinjava $JINJAVA).renderForResult($PARAM, ...);
+          - pattern:
+              (org.apache.velocity.app.Velocity $VELOCITY).evaluate($_, $_, $_, $PARAM, ...);
+          - pattern:
+              (org.apache.velocity.app.Velocity $VELOCITY).mergeTemplate($_, $_, $PARAM, ...);
+          - pattern:
+              (org.apache.velocity.app.VelocityEngine $VELOCITY_ENGINE).evaluate($_, $_, $_, $PARAM, ...);
+          - pattern:
+              (org.apache.velocity.app.VelocityEngine $VELOCITY_ENGINE).mergeTemplate($_, $_, $PARAM, ...);
+          - pattern:
+              (org.apache.velocity.runtime.RuntimeServices $VELOCITY_RUNTIME).evaluate($_, $_, $_, $PARAM, ...);
+          - pattern:
+              (org.apache.velocity.runtime.RuntimeSingleton $VELOCITY_RUNTIME).parse($PARAM, ...);
+          - pattern:
+              (org.apache.velocity.runtime.resource.util.StringResourceRepository $VELOCITY_REPO).putStringResource($_, $PARAM, ...);
+          - pattern:
+              (org.thymeleaf.ITemplateEngine $THYMELEAF).$THYMELEAF_SINK($PARAM, ...);
+          - pattern: |
+              org.springframework.expression.Expression $EXPRESSION = (org.springframework.expression.spel.standard.SpelExpressionParser $PARSER).parseExpression($PARAM, ...);
+              ...
+              $EXPRESSION.$SPEL_EXPR_FUNC();
+
+          - patterns:
+              - pattern: |
+                  org.springframework.expression.Expression $EXPRESSION = (org.springframework.expression.spel.standard.SpelExpressionParser $PARSER).parseExpression($PARAM, ...);
+                  ...
+                  $EXPRESSION.$SPEL_EXPR_FUNC($EVALUATION_CONTEXT, ...);
+              - pattern-not-inside: |
+                  org.springframework.expression.spel.support.SimpleEvaluationContext $EVALUATION_CONTEXT =
+                  (org.springframework.expression.spel.support.SimpleEvaluationContext.Builder).build();
+      - pattern-inside: |
+          @$ANNOTATION(...)
+          $RETURNTYPE $METHOD(..., $TYPE $PARAM,...) {
+            ...
+          }
+      - metavariable-regex:
+          metavariable: $TYPE
+          regex: ^(?!(Integer|Long|Float|Double|Char|Boolean|int|long|float|double|char|boolean))
+      - metavariable-regex:
+          metavariable: $REQ
+          regex: (RequestBody|PathVariable|RequestParam|RequestHeader|CookieValue|ModelAttribute)
+      - metavariable-pattern:
+          metavariable: $ANNOTATION
+          pattern-either:
+            - pattern: RequestMapping
+            - pattern: DeleteMapping
+            - pattern: GetMapping
+            - pattern: PatchMapping
+            - pattern: PostMapping
+            - pattern: PutMapping
+      - metavariable-pattern:
+          metavariable: "$THYMELEAF_SINK"
+          pattern-either:
+            - pattern: "process"
+            - pattern: "processThrottled"
+      - metavariable-pattern:
+          metavariable: "$SPEL_EXPR_FUNC"
+          pattern-either:
+            - pattern: "getValue"
+            - pattern: "setValue"
+            - pattern: "getValueType"
+            - pattern: "getValueTypeDescriptor"

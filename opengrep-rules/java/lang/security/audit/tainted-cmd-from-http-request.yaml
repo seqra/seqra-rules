@@ -9,50 +9,56 @@ rules:
   severity: ERROR
   mode: taint
   pattern-sources:
-  - patterns:
-    - pattern-either:
-      - pattern: |
-          (HttpServletRequest $REQ)
-      - patterns:   # this pattern is a hack to get the rule to recognize `map` as tainted source when `cookie.getValue(user_input)` is used.
-        - pattern-inside: |
-            (javax.servlet.http.Cookie[] $COOKIES) = (HttpServletRequest $REQ).getCookies(...);
-            ...
-            for (javax.servlet.http.Cookie $COOKIE: $COOKIES) {
-              ...
-            }
+    - patterns:
         - pattern: |
-            $COOKIE.getValue(...)
+            @$ANNOTATION(...)
+            $RETURNTYPE $METHOD(..., $TYPE $SOURCE,...) {
+            ...
+            }
+        - metavariable-regex:
+            metavariable: $TYPE
+            regex: ^(?!(Integer|Long|Float|Double|Char|Boolean|int|long|float|double|char|boolean))
+        - metavariable-regex:
+            metavariable: $REQ
+            regex: (RequestBody|PathVariable|RequestParam|RequestHeader|CookieValue|ModelAttribute)
+        - metavariable-pattern:
+            metavariable: $ANNOTATION
+            pattern-either:
+            - pattern: RequestMapping
+            - pattern: DeleteMapping
+            - pattern: GetMapping
+            - pattern: PatchMapping
+            - pattern: PostMapping
+            - pattern: PutMapping
+        - focus-metavariable: $SOURCE
+    - patterns:
+        - pattern: |
+            $RETURNTYPE $ENTRYPOINT(..., HttpServletRequest $REQ,...) {
+            ...
+            }
+        - focus-metavariable: $REQ
   pattern-sinks:
       - patterns:
           - pattern-either:
               - pattern: |
-                  (ProcessBuilder $PB) = ...;
-              - patterns:
-                - pattern: |
-                    (Process $P) = ...;
-                - pattern-not: |
-                    (Process $P) = (java.lang.Runtime $R).exec(...);
+                  new ProcessBuilder(...);
+              - pattern: |
+                    (ProcessBuilder $P).command(...);
+              - pattern: |
+                    (ProcessBuilder $P).environment().put(...);
+              - pattern: |
+                    (ProcessBuilder $P).directory(...);
               - patterns:
                   - pattern: (java.lang.Runtime $R).exec($CMD, ...);
                   - focus-metavariable: $CMD
-              - patterns:
-                  - pattern-either:
-                      - pattern-inside: |
-                          (java.util.List<$TYPE> $ARGLIST) = ...;  
-                          ...
-                          (ProcessBuilder $PB) = ...;
-                          ...
-                          $PB.command($ARGLIST);
-                      - pattern-inside: |
-                          (java.util.List<$TYPE> $ARGLIST) = ...;  
-                          ...
-                          (ProcessBuilder $PB) = ...;
-                      - pattern-inside: |
-                          (java.util.List<$TYPE> $ARGLIST) = ...;  
-                          ...
-                          (Process $P) = ...;
-                  - pattern: |
-                      $ARGLIST.add(...);
+              - pattern: |
+                    (java.util.List<$TYPE> $ARGLIST).add(...);  
+                    ...
+                    (ProcessBuilder $PB).command($ARGLIST);
+              - pattern: |
+                    (java.util.List<$TYPE> $ARGLIST).add(...);  
+                    ...
+                    new ProcessBuilder($ARGLIST);
   metadata:
     category: security
     technology:

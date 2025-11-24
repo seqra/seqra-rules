@@ -1,3 +1,9 @@
+## v1.3.0
+### feat: Unite XXE rules, add SSTI rule, update tainted-cmd-from-http-request and spring-sqli
+- feat: Unite XXE rules
+- feat: Update tainted-cmd-from-http-request
+- feat: Add SSTI rule
+- fix: Update spring-sqli
 ## v1.2.1
 ### fix: Correct `xss` rule description
 - chore: Fix `xss` rule description

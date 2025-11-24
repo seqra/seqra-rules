@@ -3,8 +3,8 @@ rules:
   mode: taint
   pattern-sources:
   - patterns:
-    - pattern: $ARG
-    - pattern-inside: |
+    - focus-metavariable: $ARG
+    - pattern: |
         public $T $M (..., String $ARG,...){...}
   pattern-sanitizers:
   - not_conflicting: true
