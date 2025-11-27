@@ -1,3 +1,6 @@
+## v1.3.1
+### fix: Ensure unique `xxe` rule IDs
+- fix: Make `xxe` rule ids unique
 ## v1.3.0
 ### feat: Unite XXE rules, add SSTI rule, update tainted-cmd-from-http-request and spring-sqli
 - feat: Unite XXE rules

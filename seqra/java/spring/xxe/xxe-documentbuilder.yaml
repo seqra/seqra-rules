@@ -1,5 +1,5 @@
 rules:
-  - id: xml-injection
+  - id: documentbuilder
     languages:
       - java
     severity: ERROR

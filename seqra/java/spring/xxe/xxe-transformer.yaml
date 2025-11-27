@@ -1,5 +1,5 @@
 rules:
-  - id: xml-injection
+  - id: transformer
     languages:
       - java
     severity: ERROR
