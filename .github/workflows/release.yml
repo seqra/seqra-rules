@@ -29,6 +29,10 @@ jobs:
         run: |
           git status || git config --global --add safe.directory $GITHUB_WORKSPACE
       -
+        name: Create rules archive
+        run: |
+         cd rules; tar cfvz ../seqra-rules.tar.gz .
+      -
         name: 'Release'
         uses: cycjimmy/semantic-release-action@v4
         env:

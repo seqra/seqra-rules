@@ -1,3 +1,6 @@
+## v2.0.0
+### feat!: Overhaul rules and fix sinks
+- feat!: Complete rules overhaul
 ## v1.3.1
 ### fix: Ensure unique `xxe` rule IDs
 - fix: Make `xxe` rule ids unique

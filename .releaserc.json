@@ -117,7 +117,12 @@
         "failTitle": false,
         "labels": false,
         "releasedLabels": false,
-        "assets": []
+        "assets": [
+          {
+            "path": "seqra-rules.tar.gz",
+            "label": "seqra-rules.tar.gz"
+          }
+        ]
       }
     ],
     [
