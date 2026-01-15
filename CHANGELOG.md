@@ -1,3 +1,6 @@
+## v2.1.0
+### feat: Add JSP source and sink
+- feat: Add jsp source and sink
 ## v2.0.0
 ### feat!: Overhaul rules and fix sinks
 - feat!: Complete rules overhaul
