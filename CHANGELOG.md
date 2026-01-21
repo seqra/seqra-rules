@@ -1,3 +1,6 @@
+## v2.1.1
+### fix: Correct CI trigger and branch name; fix OWASP rules
+- fix: Fix sqli and crypto rules
 ## v2.1.0
 ### feat: Add JSP source and sink
 - feat: Add jsp source and sink
