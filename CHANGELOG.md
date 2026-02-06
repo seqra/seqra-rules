@@ -1,3 +1,6 @@
+## v2.1.2
+### fix: Add sanitizer for redirects and clean sources
+- fix: Add a sanitizer for `unvalidated-redirect` and clean sources
 ## v2.1.1
 ### fix: Correct CI trigger and branch name; fix OWASP rules
 - fix: Fix sqli and crypto rules
